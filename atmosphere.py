@@ -1,5 +1,8 @@
 import numpy as np
 
+def normalise(v):
+    return v / np.linalg.norm(v)
+
 # ── ATMOSPHERE CONSTANTS ──────────────────────────────────────────
 # all distances are in "scene units" where planet radius = 1.0
 
@@ -11,7 +14,7 @@ SCALE_HEIGHT     = 0.1       # how fast density drops with altitude
 # Rayleigh scattering coefficients per RGB channel
 # based on real wavelengths: red=700nm, green=550nm, blue=440nm
 # blue scatters ~5.5x more than red (proportional to 1/wavelength^4)
-RAYLEIGH_COEFF = np.array([0.0025, 0.0080, 0.0330])
+RAYLEIGH_COEFF = np.array([0.0030, 0.0090, 0.0400])
 
 # sun light colour and intensity
 SUN_INTENSITY  = np.array([1.2, 1.1, 1.0])
@@ -98,68 +101,54 @@ def optical_depth_sun(point, sun_dir):
 
 # ── STEP 4: MAIN RAY MARCH ────────────────────────────────────────
 def compute_pixel_colour(ro, rd, sun_dir):
-    """
-    March a camera ray through the atmosphere and compute
-    the scattered light colour for that pixel.
-
-    ro      = ray origin (camera position)
-    rd      = ray direction (normalised)
-    sun_dir = direction towards the sun (normalised)
-
-    Returns an RGB colour as a numpy array [r, g, b].
-    """
     colour = np.zeros(3)
+    sun_n = normalise(sun_dir)
 
-    # ── does this ray hit the atmosphere at all? ──
     atmo_hit = ray_sphere_intersect(ro, rd, ATMO_RADIUS)
     if atmo_hit is None:
-        # ray goes through empty space — return black
         return colour
 
     t_start, t_end = atmo_hit
 
-    # ── does this ray hit the planet surface? ──
     planet_hit = ray_sphere_intersect(ro, rd, PLANET_RADIUS)
     if planet_hit is not None:
         t_planet, _ = planet_hit
         if t_planet > 0:
-            # ray hits planet — stop marching at surface
             t_end = min(t_end, t_planet)
 
-    # only march through positive distances (in front of camera)
     t_start = max(t_start, 0.0)
     if t_start >= t_end:
         return colour
 
-    # ── march along the view ray ──
     step_size = (t_end - t_start) / VIEW_SAMPLES
     optical_depth_view = 0.0
 
     for i in range(VIEW_SAMPLES):
-        # current sample point along the ray
         t = t_start + (i + 0.5) * step_size
         sample_point = ro + rd * t
 
-        # density at this point in the atmosphere
-        sample_density = density_at(sample_point) * step_size
+        # direction from sample point outward (away from planet centre)
+        outward = normalise(sample_point)
 
-        # accumulate optical depth along view ray
+        # how much is this sample point facing the sun
+        # positive = sun side, negative = night side
+        sun_angle = np.dot(outward, sun_n)
+
+        # only contribute if this point is on the sun-facing hemisphere
+        # soft falloff towards the terminator
+        sun_factor = max(sun_angle + 0.2, 0.0)
+
+        sample_density = density_at(sample_point) * step_size
         optical_depth_view += sample_density
 
-        # optical depth from this point to the sun
-        od_sun = optical_depth_sun(sample_point, sun_dir)
-
-        # total optical depth = view path + sun path
+        od_sun = optical_depth_sun(sample_point, sun_n)
         total_od = optical_depth_view + od_sun
 
-        # transmittance — how much light survives after scattering
-        # applied per RGB channel using Rayleigh coefficients
         transmittance = np.exp(-RAYLEIGH_COEFF * total_od)
 
-        # add scattered light contribution at this step
-        colour += transmittance * sample_density * RAYLEIGH_COEFF
+        # multiply contribution by sun factor
+        colour += transmittance * sample_density * RAYLEIGH_COEFF * sun_factor
 
-    # multiply by sun intensity and Rayleigh phase
-    colour *= SUN_INTENSITY * 60.0
+    colour *= SUN_INTENSITY * 35.0
 
     return colour

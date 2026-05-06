@@ -44,33 +44,24 @@ def rotate_camera(position, axis, angle_deg):
 
 # ── RENDER ONE FRAME ──────────────────────────────────────────────
 def render_frame(camera, sun_dir, width, height):
-    """
-    Render the full image at given resolution.
-    Returns a numpy array of shape (height, width, 3)
-    with values in range [0, 1].
-    """
     image  = np.zeros((height, width, 3))
-    sun_n  = normalise(sun_dir)
+    # normalise sun direction once here for the whole frame
+    sun_n  = sun_dir / np.linalg.norm(sun_dir)
 
     for py in range(height):
         for px in range(width):
             rd = camera.get_ray_direction(px, py)
             ro = camera.position
 
-            # ── check planet surface first ──
             planet_colour = shade_planet(ro, rd, sun_n)
-
-            # ── compute atmosphere colour ──
-            atmo_colour = compute_pixel_colour(ro, rd, sun_n)
+            atmo_colour   = compute_pixel_colour(ro, rd, sun_n)
 
             if planet_colour is not None:
-                # ray hit the planet — show surface + atmosphere on top
-                colour = planet_colour + atmo_colour * 0.5
+                atmo_blend = np.clip(atmo_colour * 2.0, 0, 1)
+                colour = planet_colour * (1.0 - atmo_blend * 0.4) + atmo_colour
             else:
-                # ray went through space — show atmosphere only
                 colour = atmo_colour
 
-            # store in image buffer
             image[py, px] = colour
 
     return image
