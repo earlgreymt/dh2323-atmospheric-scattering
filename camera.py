@@ -10,11 +10,10 @@ class Camera:
         # position orbits around it
         self.position = np.array([0.0, 0.0, 2.5])
 
+#Compute ray direction for pixel (px, py).
+#Camera always looks towards the origin.
+
     def get_ray_direction(self, px, py):
-        """
-        Compute ray direction for pixel (px, py).
-        Camera always looks towards the origin.
-        """
         fov_rad = np.radians(self.fov)
         aspect  = self.width / self.height
 
