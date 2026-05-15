@@ -33,9 +33,10 @@ scattering colours, surface improvements, and report writing.
 - GitHub repository created and blog set up
 - Project specification submitted on Canvas
 - Python environment ready with numpy, pygame and matplotlibr
+  
 ---
  
-## 3 May 2026
+### 3 May 2026
  
 Ma Jinlin started on the actual code today. The first thing to build 
 was the camera system. For every single pixel on screen, the renderer 
@@ -52,6 +53,7 @@ right especially handling the edge cases.
 **Files done:**
 - camera.py
 - Ray-sphere intersection inside atmosphere.py
+  
 ---
  
 ## 5 May 2026
@@ -73,6 +75,7 @@ actual Earth for the first time was a nice moment.
 **Files done:**
 - atmosphere.py fully completed
 - planet.py completed
+  
 ---
  
 ## 7 May 2026
