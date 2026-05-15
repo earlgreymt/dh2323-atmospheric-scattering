@@ -177,8 +177,8 @@ gives the planet a razor thin sharp halo, while a large value creates
 a wide soft glow that almost swallows the planet.
  
 <!-- INSERT SCALE HEIGHT COMPARISON SCREENSHOTS HERE -->
-![Thin atmosphere](screenshots/scale_height_thin.png)
-![Thick atmosphere](screenshots/scale_height_thick.png)
+![Thin atmosphere](screenshots/scale_height_thin.jpg)
+![Thick atmosphere](screenshots/scale_height_thick.jpg)
  
 We also tested the four sun direction presets at low resolution to 
 quickly verify the colour shifts before committing to the slow 
@@ -188,8 +188,8 @@ side by side. The difference in atmospheric colour is very clear
 even at low resolution.
  
 <!-- INSERT LOW-RES PRESET COMPARISON SCREENSHOTS HERE -->
-![Preset 1 — Noon (low resolution)](screenshots/preset1_lowres.png)
-![Preset 3 — Deep sunset (low resolution)](screenshots/preset3_lowres.png)
+![Preset 1 — Noon (low resolution)](screenshots/preset1_lowres.jpg)
+![Preset 3 — Deep sunset (low resolution)](screenshots/preset3_lowres.jpg)
  
 ---
  
