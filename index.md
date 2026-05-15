@@ -1,6 +1,3 @@
-Index · MD
-Copy
-
 # DH2323 Project Blog — Atmospheric Scattering Planet Renderer
  
 **Course:** DH2323 Computer Graphics and Interaction, KTH Royal Institute of Technology  
@@ -137,53 +134,54 @@ colour shifts between the different views. The sunset preset now
 shows a clear warm orange tint on the atmospheric limb which looks 
 much more convincing.
  
-<!-- INSERT IMPROVED SCATTERING COLOURS SCREENSHOT HERE -->
-![Rayleigh scattering](screenshots/rayleigh_colours.jpg)
+<!-- INSERT RAYLEIGH COLOURS SCREENSHOT HERE -->
+![Rayleigh scattering colours](screenshots/rayleigh_colours.png)
+ 
+---
+ 
+## 11 May 2026
+ 
+With the base colours working, we experimented with the atmosphere 
+shell thickness by varying the scale height parameter. This controls 
+how quickly the atmosphere thins out with altitude, and the visual 
+difference is dramatic.
+ 
+A very small scale height gives the planet a razor thin sharp halo 
+sitting tightly around the surface. A large value creates a wide, 
+soft glow that almost swallows the planet entirely. Getting this 
+value right was important because too thin looks unrealistic and 
+too thick obscures the surface detail underneath.
+ 
+<!-- INSERT SCALE HEIGHT COMPARISON SCREENSHOTS HERE -->
+![Thin atmosphere](screenshots/scale_height_thin.png)
+![Thick atmosphere](screenshots/scale_height_thick.png)
  
 ---
  
 ## 12 May 2026
  
-Mie scattering was added today as an extension on top of the existing 
-Rayleigh scattering. While Rayleigh handles the blue sky colour, 
-Mie scattering deals with larger particles like dust and water droplets 
-in the atmosphere. It creates the bright whitish glow you see around 
+Today we implemented Mie scattering as an extension on top of the 
+existing Rayleigh scattering. While Rayleigh accounts for the blue 
+sky colour from air molecules, Mie scattering deals with larger 
+particles like dust and water droplets. We used the Henyey-Greenstein 
+phase function to model how strongly it directs light forward towards 
+the viewer, producing the bright halo effect you typically see around 
 the sun near the horizon.
  
-The Henyey-Greenstein phase function was used to model how strongly 
-Mie scattering directs light forward towards the viewer. The effect 
-is subtle but it adds a lot of realism particularly in the sunset views, 
-and the results are best appreciated in the final high resolution renders 
-further down.
+After testing both versions side by side we actually decided to go 
+with the version without Mie scattering for our final result. The 
+Mie version produced a halo that was noticeably too bright and too 
+large, making the planet look overexposed around the limb. The 
+Rayleigh-only version looked cleaner and more physically convincing 
+for a planet viewed from outer space.
  
----
+The two demo videos below show the planet rotating under each 
+configuration so the difference is easy to compare.
  
-## 13 May 2026
- 
-Today we ran a series of parameter experiments to see how different 
-settings affect the visual output. This was actually one of the more 
-interesting parts of the project because you get to see exactly how 
-each variable changes the look of the atmosphere.
- 
-We varied the scale height and atmosphere shell thickness. The scale 
-height experiment was particularly interesting. A very small value 
-gives the planet a razor thin sharp halo, while a large value creates 
-a wide soft glow that almost swallows the planet.
- 
-<!-- INSERT SCALE HEIGHT COMPARISON SCREENSHOTS HERE -->
-![Thin atmosphere](screenshots/scale_height_thin.jpg)
-![Thick atmosphere](screenshots/scale_height_thick.jpg)
- 
-We also tested the four sun direction presets at low resolution to 
-quickly verify the colour shifts before committing to the slow 
-high-res renders. The screenshots below show Preset 1 (noon, full 
-blue atmosphere) and Preset 3 (deep sunset, red-orange dominant) 
-side by side. The difference in atmospheric colour is very clear 
-even at low resolution.
- 
-<!-- INSERT LOW-RES PRESET COMPARISON SCREENSHOTS HERE -->
-![Preset 1 — Noon (low resolution)](screenshots/preset1_lowres.jpg)
-![Preset 3 — Deep sunset (low resolution)](screenshots/preset3_lowres.jpg)
+<!-- INSERT DEMO VIDEOS HERE -->
+<!-- Save your videos to the screenshots folder and replace the filenames below -->
+[Demo without Mie scattering](screenshots/demo_no_mie.mp4)
+[Demo with Mie scattering](screenshots/demo_with_mie.mp4)
  
 ---
  
@@ -195,9 +193,9 @@ say about the implementation once we sat down to write it. There
 were quite a few small decisions made along the way that were 
 worth explaining properly.
  
-Final high resolution renders were saved today for all four sun 
-direction presets. These show the full quality of the renderer 
-with all optimizations and Mie scattering enabled.
+Final high resolution renders were saved today across all four sun 
+direction presets using the Rayleigh-only configuration. These are 
+the definitive output images from the project.
  
 <!-- INSERT FINAL HIGH RESOLUTION RENDERS HERE -->
 ![Preset 1 — Noon](screenshots/final_preset1.png)
