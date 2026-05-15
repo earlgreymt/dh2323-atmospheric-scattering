@@ -135,7 +135,7 @@ shows a clear warm orange tint on the atmospheric limb which looks
 much more convincing.
  
 <!-- INSERT RAYLEIGH COLOURS SCREENSHOT HERE -->
-![Rayleigh scattering colours](screenshots/rayleigh_colours.png)
+![Rayleigh scattering colours](screenshots/rayleigh_colours.jpg)
  
 ---
  
@@ -153,8 +153,8 @@ value right was important because too thin looks unrealistic and
 too thick obscures the surface detail underneath.
  
 <!-- INSERT SCALE HEIGHT COMPARISON SCREENSHOTS HERE -->
-![Thin atmosphere](screenshots/scale_height_thin.png)
-![Thick atmosphere](screenshots/scale_height_thick.png)
+![Thin atmosphere](screenshots/scale_height_thin.jpg)
+![Thick atmosphere](screenshots/scale_height_thick.jpg)
  
 ---
  
