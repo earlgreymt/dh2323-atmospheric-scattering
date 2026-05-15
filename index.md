@@ -32,7 +32,7 @@ scattering colours, surface improvements, and report writing.
 **What we got done:**
 - GitHub repository created and blog set up
 - Project specification submitted on Canvas
-- Python environment ready with numpy, pygame and matplotlibr
+- Python environment ready with numpy, pygame and matplotlib
   
 ---
  
