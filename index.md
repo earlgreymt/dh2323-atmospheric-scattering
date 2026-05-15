@@ -152,15 +152,9 @@ the sun near the horizon.
  
 The Henyey-Greenstein phase function was used to model how strongly 
 Mie scattering directs light forward towards the viewer. The effect 
-is subtle but it adds a lot of realism particularly in the sunset views.
- 
-The two screenshots below show the same view with Mie scattering 
-switched off and then switched on. The extra glow and softness 
-around the lit limb is clearly visible in the second image.
- 
-<!-- INSERT MIE SCATTERING COMPARISON SCREENSHOTS HERE -->
-![Without Mie scattering](screenshots/no_mie.png)
-![With Mie scattering](screenshots/with_mie.png)
+is subtle but it adds a lot of realism particularly in the sunset views, 
+and the results are best appreciated in the final high resolution renders 
+further down.
  
 ---
  
