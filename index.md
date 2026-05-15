@@ -243,6 +243,3 @@ Bucholtz, A. (1995).
 Rayleigh-scattering calculations for the terrestrial atmosphere.
 Applied Optics, 34(15), pp. 2765-2773.
  
-Hansson, ... (2021).
-Real-time atmospheric scattering.
-[Please fill in the full publication details]
