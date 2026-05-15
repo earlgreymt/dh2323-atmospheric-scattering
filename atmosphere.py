@@ -3,106 +3,80 @@ import numpy as np
 def normalise(v):
     return v / np.linalg.norm(v)
 
-# ── ATMOSPHERE CONSTANTS ──────────────────────────────────────────
-# all distances are in "scene units" where planet radius = 1.0
-
-PLANET_RADIUS    = 1.0        # solid planet surface
-ATMO_RADIUS      = 1.15        # outer edge of atmosphere shell
-SCALE_HEIGHT     = 0.1       # how fast density drops with altitude
-                               # smaller = thinner atmosphere
-
-# Rayleigh scattering coefficients per RGB channel
-# based on real wavelengths: red=700nm, green=550nm, blue=440nm
-# blue scatters ~5.5x more than red (proportional to 1/wavelength^4)
-RAYLEIGH_COEFF = np.array([0.0030, 0.0090, 0.0400])
-
-# sun light colour and intensity
-SUN_INTENSITY  = np.array([1.2, 1.1, 1.0])
-
-# number of steps along each view ray
-# more steps = more accurate but slower
-VIEW_SAMPLES   = 16
-
-# number of steps towards the sun at each view ray point
-SUN_SAMPLES    = 8
+#atmosphere content 
+PLANET_RADIUS = 1.0 #everything else is scaled to this unit
+ATMO_RADIUS   = 1.15 #atmosphere thickenss is hence 0.15 units
+SCALE_HEIGHT  = 0.025 #controls how quickly the atmosphere density falls off with altitude
 
 
-# ── HELPER: VECTOR LENGTH ─────────────────────────────────────────
+#Rayleigh constants 
+# Physical ratio 1/λ⁴ for λ_R=700nm, λ_G=550nm, λ_B=440nm
+RAYLEIGH_COEFF = np.array([2.0, 4.6, 11.3])
+SUN_INTENSITY = np.array([20.0, 15.0, 10.0]) 
+
+#MIE scattering constants
+MIE_COEFF = np.array([15.0, 15.0, 15.0]) #higher means more haze, lower means clearer skies
+MIE_G     = 0.98 #higher means more forward scattering (hazy), lower means more isotropic (clear)
+MIE_SCALE_HEIGHT = 0.015 #higher means more haze near the surface, lower means more uniform haze distribution
+
+VIEW_SAMPLES = 20 #number of steps to march along the view ray through the atmosphere
+SUN_SAMPLES  = 10 #number of steps to march along the ray towards the sun when calculating optical depth
+
+
 def length(v):
     return np.sqrt(np.dot(v, v))
 
 
-# ── STEP 1: RAY SPHERE INTERSECTION ──────────────────────────────
+# ray sphere intersection 
 def ray_sphere_intersect(ro, rd, radius):
-    """
-    Find where a ray hits a sphere centred at the origin.
-
-    ro = ray origin (3D point)
-    rd = ray direction (normalised 3D vector)
-    radius = sphere radius
-
-    Returns (t1, t2) distances along the ray, or None if no hit.
-    t1 is entry point, t2 is exit point.
-    """
-    # expand |ro + t*rd|^2 = radius^2 into quadratic at^2 + bt + c = 0
     a = np.dot(rd, rd)
     b = 2.0 * np.dot(ro, rd)
     c = np.dot(ro, ro) - radius * radius
-
     discriminant = b * b - 4.0 * a * c
-
-    # no real solution = ray misses the sphere
     if discriminant < 0:
         return None
-
     sqrt_disc = np.sqrt(discriminant)
     t1 = (-b - sqrt_disc) / (2.0 * a)
     t2 = (-b + sqrt_disc) / (2.0 * a)
-
     return (t1, t2)
 
 
-# ── STEP 2: ATMOSPHERIC DENSITY ───────────────────────────────────
+# atmospheric density 
 def density_at(point):
-    """
-    Returns atmospheric density at a 3D point.
-    Density falls off exponentially with altitude above planet surface.
-    """
     altitude = length(point) - PLANET_RADIUS
-    # clamp altitude so we never go below surface
     altitude = max(altitude, 0.0)
     return np.exp(-altitude / SCALE_HEIGHT)
 
 
-# ── STEP 3: OPTICAL DEPTH TOWARDS SUN ────────────────────────────
+# optical depth towards sun from a point in the atmosphere
 def optical_depth_sun(point, sun_dir):
-    """
-    From a point in the atmosphere, march towards the sun and
-    accumulate how much atmosphere the sunlight passes through.
-    This tells us how much sunlight is blocked/scattered before
-    reaching our point.
-    """
-    # check if sun ray exits the atmosphere
+    # if the planet sits between this point and the sun, it's fully in shadow
+    planet_hit = ray_sphere_intersect(point, sun_dir, PLANET_RADIUS)
+    if planet_hit is not None:
+        _, t2 = planet_hit
+        if t2 > 1e-4:          # planet exit is ahead → sun is blocked
+            return 1e9
+
     hit = ray_sphere_intersect(point, sun_dir, ATMO_RADIUS)
     if hit is None:
         return 0.0
-
     _, t_sun = hit
+    if t_sun <= 0.0:
+        return 0.0
+
     step_size = t_sun / SUN_SAMPLES
     optical_depth = 0.0
-
     for i in range(SUN_SAMPLES):
-        # march along sun ray
         sample_point = point + sun_dir * (i + 0.5) * step_size
         optical_depth += density_at(sample_point) * step_size
-
     return optical_depth
 
 
-# ── STEP 4: MAIN RAY MARCH ────────────────────────────────────────
+# main ray march-> the brute force function that computes the colour for each pixel by marching through the atmosphere along the view ray and accumulating scattering contributions
 def compute_pixel_colour(ro, rd, sun_dir):
-    colour = np.zeros(3)
+    """Return the scattered atmosphere colour for one pixel."""
     sun_n = normalise(sun_dir)
+    colour = np.zeros(3)
 
     atmo_hit = ray_sphere_intersect(ro, rd, ATMO_RADIUS)
     if atmo_hit is None:
@@ -120,6 +94,12 @@ def compute_pixel_colour(ro, rd, sun_dir):
     if t_start >= t_end:
         return colour
 
+    # Rayleigh phase function: (3/16π)(1 + cos²θ)
+    # θ is the angle between the view ray and the sun direction.
+    # Maximum at forward (cos_theta=1) and backward (cos_theta=-1) scattering.
+    cos_theta = np.dot(rd, sun_n)
+    phase = (3.0 / (16.0 * np.pi)) * (1.0 + cos_theta * cos_theta)
+
     step_size = (t_end - t_start) / VIEW_SAMPLES
     optical_depth_view = 0.0
 
@@ -127,28 +107,15 @@ def compute_pixel_colour(ro, rd, sun_dir):
         t = t_start + (i + 0.5) * step_size
         sample_point = ro + rd * t
 
-        # direction from sample point outward (away from planet centre)
-        outward = normalise(sample_point)
+        density   = density_at(sample_point)
+        sample_od = density * step_size
+        optical_depth_view += sample_od
 
-        # how much is this sample point facing the sun
-        # positive = sun side, negative = night side
-        sun_angle = np.dot(outward, sun_n)
-
-        # only contribute if this point is on the sun-facing hemisphere
-        # soft falloff towards the terminator
-        sun_factor = max(sun_angle + 0.2, 0.0)
-
-        sample_density = density_at(sample_point) * step_size
-        optical_depth_view += sample_density
-
-        od_sun = optical_depth_sun(sample_point, sun_n)
+        od_sun   = optical_depth_sun(sample_point, sun_n)
         total_od = optical_depth_view + od_sun
 
         transmittance = np.exp(-RAYLEIGH_COEFF * total_od)
+        colour += transmittance * sample_od * RAYLEIGH_COEFF * phase
 
-        # multiply contribution by sun factor
-        colour += transmittance * sample_density * RAYLEIGH_COEFF * sun_factor
-
-    colour *= SUN_INTENSITY * 35.0
-
+    colour *= SUN_INTENSITY
     return colour
