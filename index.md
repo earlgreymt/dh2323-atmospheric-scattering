@@ -138,7 +138,7 @@ shows a clear warm orange tint on the atmospheric limb which looks
 much more convincing.
  
 <!-- INSERT IMPROVED SCATTERING COLOURS SCREENSHOT HERE -->
-![Rayleigh scattering](screenshots/rayleigh_colours.png)
+![Rayleigh scattering](screenshots/rayleigh_colours.jpg)
  
 ---
  
